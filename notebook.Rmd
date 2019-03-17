@@ -1,0 +1,98 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+require(tidyr)
+require(skimr)
+require(parsedate)
+require(lubridate)
+require(ggplot2)
+require(dplyr)
+require(bbplot)
+require(sugrrants)
+require(tsibble)
+require(viridis)
+```
+
+```{r}
+setwd("~/Development/potato-salad")
+```
+
+```{r}
+df <- read.csv("~/Development/potato-salad/df.csv", stringsAsFactors=FALSE)
+df$posixct <-parse_date(df$PlayedAt)
+df$date <- date(df$posixct)
+df$weekday <- weekdays(df$posixct)
+df$monthAndYear <- format(df$posixct, "%Y-%m")
+df$hour <- hour(df$posixct)
+# 1jzIJcHCXneHw7ojC6LXiF
+potato.df <- df[df$Id == '1jzIJcHCXneHw7ojC6LXiF',]
+```
+
+```{r}
+df %>%
+  group_by(Name) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+```
+
+```{r}
+df %>%
+  group_by(Id) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+```
+
+
+```{r}
+(nrow(df[df$Id == '1jzIJcHCXneHw7ojC6LXiF',]) / nrow(df)) * 100
+```
+
+```{r}
+history.rle <- rle(df$Id)
+rle.df <- data.frame(tapply(history.rle$lengths, history.rle$values, max))
+colnames(rle.df) <- c("values")
+rle.df$song <- rownames(rle.df)
+rownames(rle.df) <- c()
+rle.df <- data.frame(song = rle.df$song, values = rle.df$values)
+```
+
+```{r}
+daily.potato <- potato.df %>%
+  group_by(date) %>%
+  summarise(n=n()) %>% mutate(date = as.Date(date)) %>%
+  complete(date = seq.Date(min(date), max(date), by="day"))
+daily.potato[is.na(daily.potato)] <- 0
+```
+
+```{r}
+potato.calendar <- daily.potato %>%
+  frame_calendar(x = 1, y = 1, date = date, calendar = "monthly")
+
+potato.calendar$n[potato.calendar$n > 0] <- 1
+
+p8 <- potato.calendar %>%
+  ggplot(aes(x = .x, y = .y)) +
+  geom_tile(aes(fill = n), colour = "grey50") +
+  scale_fill_viridis()
+prettify(p8, label = "label", label.padding = unit(0.2, "lines"))
+```
+
+```{r}
+potato.df$weekday <- factor(potato.df$weekday, levels=c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))
+potato.hourly.weekly <- potato.df %>%
+  group_by(hour, weekday) %>%
+  summarise(n = n())
+
+ggplot(potato.hourly.weekly, aes(hour, weekday)) +
+  geom_point(aes(color = potato.hourly.weekly$n))  +
+  scale_colour_gradientn(colours = terrain.colors(7)) 
+
+```
+
+```{r}
+write.csv(data.frame(weekday = potato.df$weekday, hour = potato.df$hour), file = 'potato_df_weekday_hour.csv', row.names = FALSE)
+```
+
