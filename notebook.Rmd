@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Potato Salad"
 output: html_notebook
 ---
 
@@ -47,10 +47,12 @@ df %>%
 
 
 ```{r}
+# of all my songs how many are potato salad
 (nrow(df[df$Id == '1jzIJcHCXneHw7ojC6LXiF',]) / nrow(df)) * 100
 ```
 
 ```{r}
+# songs listened in a row
 history.rle <- rle(df$Id)
 rle.df <- data.frame(tapply(history.rle$lengths, history.rle$values, max))
 colnames(rle.df) <- c("values")
@@ -90,6 +92,62 @@ ggplot(potato.hourly.weekly, aes(hour, weekday)) +
   geom_point(aes(color = potato.hourly.weekly$n))  +
   scale_colour_gradientn(colours = terrain.colors(7)) 
 
+```
+
+## Probability of listening to Potato one a weekday
+```{r}
+weekdays <- df %>%
+  select(date,weekday) %>%
+  unique() %>%
+  group_by(weekday) %>%
+  summarise(AmountWeekdays = n())
+
+potato.by.weekday <- potato.df %>%
+  group_by(weekday) %>%
+  summarise(AmountPotatoWeekday = n())
+
+
+potato.probs.weekday <- merge(potato.by.weekday, weekdays, by = c('weekday'))
+potato.probs.weekday$percentage <- (potato.probs.weekday$AmountPotatoWeekday / potato.probs.weekday$AmountWeekdays)
+
+
+potato.probs.weekday.clean <- potato.probs.weekday %>%
+  select(weekday, percentage)
+
+potato.probs.weekday.clean <- potato.probs.weekday.clean %>%
+  arrange(weekday)
+
+```
+
+## Probability of listening to Potato one a weekday at a particular time range
+```{r}
+# how many hours there are present in the dataset, for example the time X appears Y times
+hours <- df %>%
+  select(date,hour) %>%
+  unique() %>%
+  group_by(hour) %>%
+  summarise(AmountHours = n())
+
+potato.by.hour <- potato.df %>%
+  group_by(hour) %>%
+  summarise(AmountPotatoPerHour = n())
+
+potato.probs.weekday.hour <- merge(potato.by.hour, hours, by = c('hour'), all.y = TRUE)
+potato.probs.weekday.hour[is.na(potato.probs.weekday.hour)] <- 0
+potato.probs.weekday.hour$percentage <- 
+  (potato.probs.weekday.hour$AmountPotatoPerHour / potato.probs.weekday.hour$AmountHours)
+potato.probs.weekday.hour.clean <- potato.probs.weekday.hour %>%
+  select(hour, percentage)
+```
+
+```{r}
+data.frame(table(potato.probs.weekday.clean$percentage, potato.probs.weekday.hour.clean$percentage))
+data.frame(outer(potato.probs.weekday.hour.clean$percentage, potato.probs.weekday.clean$percentage, FUN = "*"))
+potato.final.probs <- data.frame(tcrossprod(potato.probs.weekday.clean$percentage, 
+                                            potato.probs.weekday.hour.clean$percentage) * 100)
+
+colnames(potato.final.probs) <- 0:23
+rownames(potato.final.probs) <- levels(potato.probs.weekday.clean$weekday)
 ```
 
 ```{r}
