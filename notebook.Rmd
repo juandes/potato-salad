@@ -151,6 +151,13 @@ rownames(potato.final.probs) <- levels(potato.probs.weekday.clean$weekday)
 ```
 
 ```{r}
-write.csv(data.frame(weekday = potato.df$weekday, hour = potato.df$hour), file = 'potato_df_weekday_hour.csv', row.names = FALSE)
+potato.training <- potato.df %>%
+  select(weekday, hour)
+potato.training$weekday <- as.numeric(potato.training$weekday)
+potato.training$listened <- as.factor(1)
+```
+
+```{r}
+write.csv(potato.training, file = 'potato_df_weekday_hour.csv', row.names = FALSE)
 ```
 
