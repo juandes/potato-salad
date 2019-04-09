@@ -201,6 +201,8 @@ hours <- df.after.first.potato %>%
   group_by(hour) %>%
   summarise(AmountHours = n())
 
+hours <- rbind(hours, c(2,0))
+
 potato.by.hour <- potato.df %>%
   group_by(hour) %>%
   summarise(AmountPotatoPerHour = n())
@@ -211,10 +213,11 @@ potato.probs.weekday.hour$percentage <-
   (potato.probs.weekday.hour$AmountPotatoPerHour / potato.probs.weekday.hour$AmountHours)
 potato.probs.weekday.hour.clean <- potato.probs.weekday.hour %>%
   select(hour, percentage)
+potato.probs.weekday.hour.clean[is.na(potato.probs.weekday.hour.clean)] <- 0
+
 ```
 
 ```{r}
-data.frame(outer(potato.probs.weekday.hour.clean$percentage, potato.probs.weekday.clean$percentage, FUN = "*"))
 potato.final.probs <- data.frame(tcrossprod(potato.probs.weekday.clean$percentage, 
                                             potato.probs.weekday.hour.clean$percentage) * 100)
 
@@ -222,3 +225,12 @@ colnames(potato.final.probs) <- 0:23
 rownames(potato.final.probs) <- levels(potato.probs.weekday.clean$weekday)
 ```
 
+```{r}
+potato.training <- potato.df %>%
+  select(weekday, hour)
+potato.training$weekday <- as.numeric(potato.training$weekday)
+```
+
+```{r}
+write.csv(potato.training, file = 'potato_df_weekday_hour_new.csv', row.names = FALSE)
+```
