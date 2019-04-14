@@ -25,5 +25,3 @@ df.to_csv('df.csv', index=False, encoding='utf-8')
 potato_df = df.loc[df['Id']== '1jzIJcHCXneHw7ojC6LXiF']
 
 potato_df.to_csv('potato_df.csv', index=False, encoding='utf-8')
-
-

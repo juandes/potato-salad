@@ -23,7 +23,7 @@ clf.fit(X_train)
 xx, yy = np.meshgrid(np.linspace(-5, 15, 500), np.linspace(-5, 30, 500))
 Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
-plt.title("Potato Salad Decision Boundary")
+plt.title("Potato Salad SVM Model Decision Boundary")
 # comment out the next line to see the "ripples" of the boundary
 # plt.contourf(xx, yy, Z, levels=np.linspace(Z.min(), 0, 7), cmap=plt.cm.PuBu)
 a = plt.contour(xx, yy, Z, levels=[0], linewidths=2, colors='darkred')
